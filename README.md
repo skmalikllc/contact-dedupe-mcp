@@ -1,4 +1,8 @@
+<img src="https://raw.githubusercontent.com/skmalikllc/automation-portfolio/main/assets/cover-contact-dedupe-mcp.png" alt="contact-dedupe-mcp" width="100%">
+
 # contact-dedupe — MCP server
+
+`OPEN-SOURCE UTILITY`
 
 [![tests](https://github.com/skmalikllc/contact-dedupe-mcp/actions/workflows/tests.yml/badge.svg)](https://github.com/skmalikllc/contact-dedupe-mcp/actions/workflows/tests.yml)
 [![license: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
@@ -70,6 +74,30 @@ conflicts flagged: Full Name: kept "Ali Raza" / dropped "Raza, Ali"
 compare_records → { score: 0.98, reasons: [ 'same email', 'same name' ],
                     verdict: 'duplicate' }
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+  A[Contact export<br/>CSV] --> B[profile_csv<br/>columns, fill rate,<br/>field detection]
+  B --> C[find_duplicates<br/>score + evidence]
+  C --> D{score >= threshold?}
+  D -- no --> E[left separate]
+  D -- yes --> F[transitive grouping<br/>A–B, B–C ⇒ A,B,C]
+  F --> G[dedupe_csv<br/>merge + conflict report]
+  G --> H[cleaned CSV]
+  G --> I[conflicts flagged<br/>kept vs dropped]
+  C --> J[compare_records<br/>tune the threshold]
+```
+
+```
+src/server.mjs   MCP protocol only — tool definitions and zod schemas
+src/dedupe.js    matching, grouping and merge logic — no protocol code
+src/csv.js       RFC 4180 reader/writer — no dependencies
+```
+
+The matching logic holds no MCP code on purpose. The rules that decide whether two
+people are the same are the part worth testing on their own.
 
 ## Matching rules
 
@@ -162,6 +190,52 @@ npm run e2e   # protocol-level run over stdio against sample/contacts.csv
 
 Both commands run in CI on Node 20, 22 and 24 — the badge above is that
 workflow.
+
+## Design decisions
+
+**Why evidence instead of a verdict.** A dedupe tool that returns "these 40 rows are
+duplicates" is unusable on a real client list, because the cost of a wrong merge is
+much higher than the cost of a missed one. Every group comes back with the signals
+behind it so a human can overrule it before a file is written.
+
+**Why the threshold is a parameter.** The right cut-off depends on the list. A
+membership database of one family name needs a different threshold from a B2B CRM.
+`compare_records` exists so you can calibrate it on real pairs instead of guessing.
+
+**Why no fuzzy-matching library.** The matching is a handful of specific,
+explainable rules — Gmail dot and plus-tag normalisation, last-nine-digit phone
+comparison, order-insensitive name comparison with Levenshtein for the remainder.
+A generic similarity score would be harder to justify to a client and harder to tune.
+
+**Why the CSV reader is written in-repo.** One fewer dependency in a tool that
+handles client data, and RFC 4180 is small enough to implement correctly.
+
+## Limitations
+
+- **CSV only.** vCard, Outlook PST and direct CRM APIs are not supported.
+- **Latin-script name matching.** The normalisation handles accents and punctuation;
+  it is not tuned for non-Latin scripts.
+- **The Gmail dot rule is Gmail-specific** and deliberately not applied to other
+  providers, which is correct but means some genuine duplicates on other domains
+  will be missed.
+- **No fuzzy company matching** beyond containment — company is only ever a
+  tie-breaker on top of a name match.
+- **Single-file operation.** It does not merge two separate exports against each
+  other; it deduplicates within one.
+
+## Contributing
+
+Issues and pull requests are welcome. If you are changing matching behaviour, add a
+test to `test/dedupe.test.js` that captures the pair or group you are fixing — the
+matching rules are the part of this repo where a regression is expensive.
+
+```bash
+npm install
+npm test
+npm run e2e
+```
+
+CI runs both on Node 20, 22 and 24. Please keep `src/dedupe.js` free of protocol code.
 
 ## Security and privacy
 
