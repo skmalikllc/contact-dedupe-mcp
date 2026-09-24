@@ -79,15 +79,15 @@ compare_records → { score: 0.98, reasons: [ 'same email', 'same name' ],
 
 ```mermaid
 flowchart LR
-  A[Contact export<br/>CSV] --> B[profile_csv<br/>columns, fill rate,<br/>field detection]
-  B --> C[find_duplicates<br/>score + evidence]
-  C --> D{score >= threshold?}
-  D -- no --> E[left separate]
-  D -- yes --> F[transitive grouping<br/>A–B, B–C ⇒ A,B,C]
-  F --> G[dedupe_csv<br/>merge + conflict report]
-  G --> H[cleaned CSV]
-  G --> I[conflicts flagged<br/>kept vs dropped]
-  C --> J[compare_records<br/>tune the threshold]
+  A["Contact export<br/>CSV"] --> B["profile_csv<br/>columns, fill rate,<br/>field detection"]
+  B --> C["find_duplicates<br/>score + evidence"]
+  C --> D{"score at or above threshold?"}
+  D -- no --> E["left separate"]
+  D -- yes --> F["transitive grouping<br/>A–B, B–C then A,B,C"]
+  F --> G["dedupe_csv<br/>merge + conflict report"]
+  G --> H["cleaned CSV"]
+  G --> I["conflicts flagged<br/>kept vs dropped"]
+  C --> J["compare_records<br/>tune the threshold"]
 ```
 
 ```
