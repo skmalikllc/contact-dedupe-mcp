@@ -90,12 +90,6 @@ flowchart LR
   C --> J["compare_records<br/>tune the threshold"]
 ```
 
-```
-src/server.mjs   MCP protocol only — tool definitions and zod schemas
-src/dedupe.js    matching, grouping and merge logic — no protocol code
-src/csv.js       RFC 4180 reader/writer — no dependencies
-```
-
 The matching logic holds no MCP code on purpose. The rules that decide whether two
 people are the same are the part worth testing on their own.
 
@@ -138,7 +132,7 @@ businesses moving CRM, VAs maintaining a list — and anyone using Claude who
 wants that cleanup done inside the conversation rather than by hand in a
 spreadsheet.
 
-## Architecture
+## Repository layout
 
 ```
 src/server.mjs   MCP server (stdio) — tool definitions and zod schemas
@@ -154,9 +148,6 @@ MCP client (Claude)  ──stdio──▶  src/server.mjs  ──▶  src/dedupe
                                         │                  │
                                         └──▶ src/csv.js ◀──┘
 ```
-
-The matching logic holds no MCP code on purpose — the rules that decide whether
-two people are the same are the part worth testing on their own.
 
 ## Installation
 
