@@ -1,0 +1,24 @@
+{
+  "name": "contact-dedupe-mcp",
+  "version": "1.0.0",
+  "description": "MCP server to profile, match and deduplicate contact exports (CSV)",
+  "main": "src/server.mjs",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test test/dedupe.test.js",
+    "e2e": "node test/server.e2e.mjs",
+    "start": "node src/server.mjs"
+  },
+  "keywords": [],
+  "author": "SK Malik",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.6.5"
+  },
+  "bin": {
+    "contact-dedupe-mcp": "src/server.mjs"
+  }
+}
